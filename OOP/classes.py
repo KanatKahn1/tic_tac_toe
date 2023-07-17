@@ -13,3 +13,5 @@ auto1.display_into()
 auto2.display_into()
 auto3.display_into()
 # print(auto1.model)
+
+print(auto1.model)
