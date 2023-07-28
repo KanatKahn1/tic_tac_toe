@@ -5,7 +5,7 @@ cell_size = 20
 cell_number = 20
 
 FPS = 30
-
+pygame.init()
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((cell_size * cell_number, cell_size * cell_number))
 pygame.display.set_caption('Prehistoric Snake')
@@ -22,6 +22,8 @@ class Main:
         self.check_collisions()
         self.check_fail()
         self.check_edges()
+        self.draw_score()
+
 
 
     def check_collisions(self):
@@ -38,34 +40,43 @@ class Main:
             if block == self.snake.body[0]:
                 self.reset()
     def reset(self):
-        self.snake.body = [math.Vector2(5,10), math.Vector2(4.10), math.Vector2(3,10)]
-        # self.snake.direction = math.Vector2(0,0)
+        self.snake.__init__()
+        self.snake.direction = math.Vector2(0, 0)
+    def draw_score(self):
+        game_font = pygame.font.Font("assets/MinecraftRegular-Bmg3.ttf", 18)
+        score_text = str(len(self.snake.body) - 3)
+        score_surface = game_font.render(score_text, True, (56,74,12))
+        score_x = int(cell_size * cell_size - 60)
+        score_y = int(cell_size * cell_size - 40)
+        score_rect = score_surface.get_rect(center=(score_x, score_y))
+        apple_rect = self.fruit.apple.get_rect(midright=(score_rect.left, score_rect.centery))
+        bg_rect = pygame.Rect(apple_rect.left,apple_rect.top,apple_rect.width + score_rect.width + 6,apple_rect.height)
+        pygame.draw.rect(screen, (167, 209, 61), bg_rect)
+        screen.blit(score_surface,score_rect)
+        screen.blit(self.fruit.apple, apple_rect)
+        pygame.draw.rect(screen, (56, 74, 12), bg_rect, 2)
 
     def check_edges(self):
-        body_len = len(self.snake.body)
-        body_copy = self.snake.body
-        c_r_d = 0
-        c_l_u = cell_number
+        for i in range(len(self.snake.body)):
+            body_copy = self.snake.body
+            if body_copy[i].x >= cell_number and self.snake.direction.x == 1 :
+                current_pos = math.Vector2(0, self.snake.body[0].y)
+                self.snake.body[i] = current_pos
+                current_pos -= math.Vector2(1,0)
+            elif body_copy[i].x < 0 and self.snake.direction.x == -1:
+                current_pos = math.Vector2(cell_number, self.snake.body[0].y)
+                self.snake.body[i] = current_pos
+                current_pos += math.Vector2(1,0)
+            elif body_copy[i].y >= cell_number and self.snake.direction.y == 1:
+                current_pos = math.Vector2(self.snake.body[0].x, 0)
+                self.snake.body[i] = current_pos
+                current_pos -= math.Vector2(0,1)
+            elif body_copy[i].y < 0 and self.snake.direction.y == -1:
+                current_pos = math.Vector2( self.snake.body[0].x, cell_number,)
+                self.snake.body[i] = current_pos
+                current_pos += math.Vector2(0,1)
 
-        if self.snake.body[-1].x >= cell_number:
-            for i in range(body_len):
-                self.snake.body[i] = math.Vector2(c_r_d, body_copy[0].y)
-                c_r_d -= 1
-        if self.snake.body[-1].x <= 0:
 
-            for i in range(body_len):
-                self.snake.body[i] = math.Vector2(c, body_copy[0].y)
-                c += 1
-        # if self.snake.body[-1].y <= cell_number:
-        #     c = cell_number
-        #     for i in range(body_len):
-        #         self.snake.body[i] = math.Vector2(body_copy[0]. x, c)
-        #         c += 1
-        # if self.snake.body[-1].x >= cell_number:
-        #     c = 0
-        #     for i in range(body_len):
-        #         self.snake.body[i] = math.Vector2(body_copy[0].x, c)
-        #         c -= 1
 class Snake:
     def __init__(self):
         self.body = [math.Vector2(5, 10), math.Vector2(4, 10), math.Vector2(3, 10)]
@@ -89,11 +100,10 @@ class Snake:
         self.tail_u = pygame.transform.rotate(self.tail_l, 90)
 
         up_right_turn = pygame.image.load('assets/Turned_body.png')
-        self.up_right_turned = pygame.transform.scale(up_right_turn, (cell_size, cell_size))
-        self.up_left_turned = pygame.transform.rotate(self.up_right_turned, 90)
-        self.down_left_turned = pygame.transform.rotate(self.up_left_turned, 90)
-        self.down_right_turned = pygame.transform.rotate(self.down_left_turned, 90)
-
+        self.br_turned = pygame.transform.scale(up_right_turn, (cell_size, cell_size))
+        self.bl_turned = pygame.transform.rotate(self.br_turned, 90)
+        self.tl_turned = pygame.transform.rotate(self.bl_turned, 90)
+        self.tr_turned = pygame.transform.rotate(self.tl_turned, 90)
     def draw_snake(self):
         self.update_head()
         self.updater_tail()
@@ -112,13 +122,13 @@ class Snake:
                     screen.blit(self.body_horizontal,rect)
                 else:
                     if prev_block.x == -1 and next_block.y == -1 or prev_block.y == -1 and next_block.x ==-1:
-                        screen.blit(self.up_right_turned,rect)
+                        screen.blit(self.br_turned,rect)
                     elif prev_block.x == -1 and next_block.y == 1 or prev_block.y == 1 and next_block.x ==-1:
-                        screen.blit(self.down_right_turned,rect)
+                        screen.blit(self.bl_turned, rect)
                     elif prev_block.x == 1 and next_block.y == -1 or prev_block.y == -1 and next_block.x == 1:
-                        screen.blit(self.up_left_turned, rect)
+                        screen.blit(self.tr_turned, rect)
                     elif prev_block.x == 1 and next_block.y == 1 or prev_block.y == 1 and next_block.x == 1:
-                        screen.blit(self.down_left_turned, rect)
+                        screen.blit(self.tl_turned,rect)
 
 
     def update_head(self):
